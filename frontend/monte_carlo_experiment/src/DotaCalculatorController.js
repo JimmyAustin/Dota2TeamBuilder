@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import runFunc from './evaluate_game.js';
 import treeWorker from './dota_tree_handler.worker';
+import MatchRateCounter from './MatchRateCounter.js';
 
 const steps_before_checkin = 50;
 
@@ -23,10 +24,13 @@ class DotaCalculatorController extends Component {
                        simmed_game_count: event.data.simmed_game_count})
       } else if (event.data.state == 'MODEL_READY') {
         this.setState({ready: true})
+      } else if (event.data.state == 'COMPLETE_FINISHED') {
+        this.setState({finished: true, running: false, ready: true})
       }
     });
 
     this.state = {
+      finished: false,
       running: false,
       ready: false,
       step_count: 0,
@@ -81,9 +85,9 @@ class DotaCalculatorController extends Component {
         <br/>
         Best: {this.state.best_picks}
         <br/>
-        simmed_game_count: {this.state.simmed_game_count}
+        <MatchRateCounter simmed_game_count={this.state.simmed_game_count}/>
         <br/>
-        <button onClick={this.toggle_calculations} disabled={this.state.ready == false}>
+        <button onClick={this.toggle_calculations} disabled={this.state.ready == false || this.state.finished == true}>
             {this.state.running ? 'Stop' : 'Start'}
         </button>
       </div>

@@ -76,20 +76,19 @@ function build_model_input(radiant_heroes, dire_heroes) {
 var last_game_run = null
 
 async function run_games(games) {
-  if (last_game_run != null) {
-    console.log(`Wait Since GamesRun: ${Date.now() - last_game_run}`)
-  }
   var start = Date.now();
   //---
   var game_embeddings = games.map((x) => {
     return build_model_input(x[0], x[1])
   });
+  if (game_embeddings[0] == undefined || game_embeddings[0].length != 770) {
+    debugger;
+  }
   var prediction = model.predict(tf.tensor2d(game_embeddings)).dataSync()
       
   var grouped_predictions = Array(prediction.length/2).fill().map((_, i) => {
     return [prediction[i], prediction[i+1]]
   });
-  console.log(`GamesRun: ${Date.now() - start}`)
   last_game_run = Date.now()
   return grouped_predictions
 }

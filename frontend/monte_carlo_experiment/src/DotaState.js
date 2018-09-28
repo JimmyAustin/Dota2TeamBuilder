@@ -12,7 +12,14 @@ class DotaState {
 		this.banned_heroes = parameters.banned_heroes || []
 		this.team = parameters.team
 		this.choice = parameters.choice
+		this.final_state = this.is_final()
 	};
+
+	is_final() {
+		return (this.radiant_heroes == 5 &&
+				this.dire_heroes == 5 &&
+				this.banned_heroes == 12)
+	}
 
 	future_picks() {
 		if (this.banned_heroes == undefined) {
@@ -36,6 +43,9 @@ class DotaState {
 			} else {
 				dire_heroes.push(hero);				
 			}
+		}
+		if (radiant_heroes[0][0] != undefined) {
+			debugger;
 		}
 		return [radiant_heroes, dire_heroes]
 	}

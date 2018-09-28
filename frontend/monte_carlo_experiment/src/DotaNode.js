@@ -1,5 +1,7 @@
 import heroes from './config/heroes';
-import exploration_parameter from './config/parameters'
+import exploration_parameter from './config/parameters';
+import shuffle from 'shuffle-array';
+
 console.log(heroes)
 var all_hero_ids = heroes.map((hero) => {
 	return hero['ID']
@@ -11,11 +13,14 @@ class DotaNode {
 		this.depth = depth
 		this.state = state
 		this.being_expanded = false
+		this.fully_explored = this.state.final_state
 		this.children = []
 		this.wins = 0
 		this.played = 0
 		this.value = 0
 		this.future_gamestate_count = this.possible_future_gamestates_count()
+		this.possible_future_picks = null
+		this.future_picks = this.future_picks.bind(this)
 	}
 
 	backpropogate(wins, played) {
@@ -43,6 +48,33 @@ class DotaNode {
 		return total_options
 	}
 
+	next_expansion_node(node) {
+		if (this.fully_explored == true) {
+			return null;
+		}
+
+		if (this.fully_expanded() == false) {
+			return this;
+		}
+
+		var best_child = null;
+		var best_child_value = 0;
+
+		this.children.forEach((x) => {
+			if (x.fully_explored == true) {
+				debugger;
+			}
+			if (x.fully_explored == false && x.value > best_child_value && x.being_expanded == false) {
+				best_child = x;
+				best_child_value = x.value
+			}
+		})
+		if (this.best_child == null) {
+			this.fully_explored = true
+		}
+		return best_child.next_expansion_node();
+	}
+
 	best_child() {
 		var best_child = null;
 		var best_child_value = 0;
@@ -53,6 +85,23 @@ class DotaNode {
 			}
 		})
 		return best_child;
+	}
+
+	future_picks(count) {
+		if (this.possible_future_picks == null) {
+			this.possible_future_picks = shuffle(this.state.future_picks())
+		}
+		var picks = this.possible_future_picks.slice(0, count)
+		this.possible_future_picks = this.possible_future_picks.slice(count)
+		return picks
+	}
+
+	fully_expanded() {
+		if (this.possible_future_picks != null && this.possible_future_picks.length == 0) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	most_explored_child() {

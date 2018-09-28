@@ -22,9 +22,6 @@ var timerId = setInterval(function () {
     }
 }, 200);
 
-
-
-
 self.addEventListener("message", getMessage);
 
 function getMessage(event) {
@@ -41,16 +38,26 @@ async function runCalculations(data) {
     console.log('REstarting')        
 
     while (count < max_step_count) {
-        console.log('Run')     
-        console.log(`${count}/${max_step_count}`)  
+
         if (await tree.step()) {
             count += 1;
+            if (count == 2000) {
+                debugger;
+            }
             if (count % 10 == 0) {
                 self.postMessage({state: 'UPDATE', 
                                   current_best: chain_to_choices(tree.best_option_chain()),
                                   step_count: count,
-                                  simmed_game_count: tree.game_count})          
-            }             
+                                  simmed_game_count: tree.game_count})
+            }
+            if (tree.finished == true) {
+                debugger;
+                self.postMessage({state: 'COMPLETE_FINISHED', 
+                                  current_best: chain_to_choices(tree.best_option_chain()),
+                                  step_count: count,
+                                  simmed_game_count: tree.game_count})
+                return;
+            }            
         } else {
 
         }
@@ -61,6 +68,6 @@ async function runCalculations(data) {
 
 function chain_to_choices(best_option_chain) {
     return best_option_chain.map((x) => {
-        return `${hero_embeddings[x.state.choice].HERO} (${x.wins} - ${x.played})`;
+        return `${hero_embeddings[x.state.choice].HERO} (${x.wins} - ${x.played}, ${x.wins/x.played*100}%)`;
     })
 }
