@@ -40,15 +40,26 @@ class DotaTree {
 			banned_heroes: []
 		})
 
+		this.game_count = 0
 		this.root_node = new DotaNode(null, 0, base_state)
+		this.step_count = 0
+		this.expand = this.expand.bind(this)
 	};
 
 
-	step() {
-		this.expand(this.next_expansion_node())
+	async step() {
+		this.step_count += 1
+		var node_to_expand = this.next_expansion_node()
+		if (node_to_expand.being_expanded) {
+			return false
+		} else {
+			await this.expand(node_to_expand)
+			return true
+		}
 	}
 
 	async expand(node) {
+		node.being_expanded = true
 		var future_possible_picks = node.state.future_picks()
 		var pick_type = pick_order[node.depth]
 		node.children = future_possible_picks.map((hero_pick) => {
@@ -91,7 +102,7 @@ class DotaTree {
 			return x.state.played_out_team();
 		});
 		var result = await run_games(played_out_teams);
-		console.log(result)
+		this.game_count += played_out_teams.length;
 		result.forEach((result, i) => {
 			var radiant_win = result[0] > result[1]
 			var node_is_radiant = pick_type['team'] === 'R';
@@ -102,16 +113,21 @@ class DotaTree {
 				node.children[i].backpropogate(0,1);					
 			}
 		});
+		node.being_expanded = false
 	}
 
 	next_expansion_node() {
+		var path = []
 		var expansion_node = this.root_node
 		while (expansion_node.children.length != 0) {
 			var best_child = expansion_node.best_child()
 			if (best_child == null) {
 				return expansion_node
-			} 
+			}
+			path.push(best_child.state.choice)
+			expansion_node = best_child; 
 		}
+		console.log(`EXPANSION: ${path}`)
 		return expansion_node
 	}
 
@@ -120,7 +136,6 @@ class DotaTree {
 		var radiant_bans = {}
 		var dire_heroes = {}
 		var dire_bans = {}
-
 	}
 
 	best_option_chain() {

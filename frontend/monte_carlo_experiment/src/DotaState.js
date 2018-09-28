@@ -29,10 +29,6 @@ class DotaState {
 		var radiant_heroes = this.radiant_heroes.slice();
 		var dire_heroes = this.dire_heroes.slice();
 		var available_heros = this.future_picks();
-		console.log("available_heros");
-		console.log(available_heros)
-		console.log("all_heros");
-		console.log(all_hero_ids)
 		while (radiant_heroes.length !== 5 || dire_heroes.length !== 5) {
 			var hero = available_heros[Math.floor(Math.random()*available_heros.length)];
 			if (radiant_heroes.length !== 5) {

@@ -10,6 +10,7 @@ class DotaNode {
 		this.parent = parent
 		this.depth = depth
 		this.state = state
+		this.being_expanded = false
 		this.children = []
 		this.wins = 0
 		this.played = 0
@@ -46,7 +47,7 @@ class DotaNode {
 		var best_child = null;
 		var best_child_value = 0;
 		this.children.forEach((x) => {
-			if (x.value > best_child_value) {
+			if (x.value > best_child_value && x.being_expanded == false) {
 				best_child = x;
 				best_child_value = x.value
 			}
@@ -57,10 +58,19 @@ class DotaNode {
 	most_explored_child() {
 		var best_child = null;
 		var best_child_value = 0;
+		var best_win_perc = 0;
 		this.children.forEach((x) => {
+			var win_perc = x.wins/x.played
 			if (x.played > best_child_value) {
 				best_child = x;
 				best_child_value = x.played
+				best_win_perc = win_perc
+			} else if (x.played == best_child_value) {
+				if (win_perc > best_win_perc) {
+					best_win_perc = win_perc
+					best_child_value = x.played
+					best_child = x
+				}
 			}
 		})
 		return best_child;
