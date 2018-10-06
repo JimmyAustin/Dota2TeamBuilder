@@ -34,6 +34,20 @@ total_hero_pool = len(hero_list)
 model_directory = './tmp/'
 model_name = 'classification__PO40HVWG6Y__.01-0.22.hdf5'
 
+if True:
+    mode = 'all_pick'
+    radiant = ['storm_spirit', 'spectre', 'silencer']
+    dire = ['bloodseeker', 'doom_bringer', 'venomancer']
+    team = 'radiant'
+else:
+    mode = 'captains'
+    radiant = []
+    radiant_bans = []
+    dire = []
+    team = 'radiant'
+    starting_team = 'radiant'
+
+
 input_function = build_input_function(label_classes=0,
                                       include_seperate_one_hot_encodings=False,
                                       include_integrated_one_hot_encodings=False,
@@ -42,9 +56,9 @@ input_function = build_input_function(label_classes=0,
 
 model = keras.models.load_model(path.join(model_directory, model_name))
 
-def get_random_game(existing_radient, existing_dire, remaining_picks, remaining_selection_order):
+def get_random_game(existing_radiant, existing_dire, remaining_picks, remaining_selection_order):
     picks = {
-        'radient': copy(existing_radient),
+        'radiant': copy(existing_radiant),
         'dire': copy(existing_dire)
     }
     picked = []
@@ -56,39 +70,39 @@ def get_random_game(existing_radient, existing_dire, remaining_picks, remaining_
                 selection = None
         picked.append(selection)
         if pick_or_ban == 'pick':
-            if team == 'radient':
-                picks['radient'].append(selection)
+            if team == 'radiant':
+                picks['radiant'].append(selection)
             else:
                 picks['dire'].append(selection)
-    return picks['radient'], picks['dire']
+    return picks['radiant'], picks['dire']
 
-def get_next_game(existing_radient, existing_dire, remaining_picks, remaining_selection_order):
+def get_next_game(existing_radiant, existing_dire, remaining_picks, remaining_selection_order):
     next_team, next_pick_or_ban = remaining_selection_order[0]
     random_selection = choice(remaining_picks)
-    radient = copy(existing_radient)
+    radiant = copy(existing_radiant)
     dire = copy(existing_dire)
     remaining_picks = [x for x in remaining_picks if x is not random_selection]
     if next_pick_or_ban == 'pick':
-        if next_team == 'radient':
-            radient.append(random_selection)
+        if next_team == 'radiant':
+            radiant.append(random_selection)
         else:
             dire.append(random_selection)
-    return random_selection, (radient, dire, remaining_picks, remaining_selection_order[1:])
+    return random_selection, (radiant, dire, remaining_picks, remaining_selection_order[1:])
 
-def print_game_debug(radient, dire):
-    radient = [get_hero_from_id(x)['name'] for x in radient]
+def print_game_debug(radiant, dire):
+    radiant = [get_hero_from_id(x)['name'] for x in radiant]
     dire = [get_hero_from_id(x)['name'] for x in dire]
-    #print("Playing {0} vs {1}".format(radient, dire))
+    #print("Playing {0} vs {1}".format(radiant, dire))
 
-def play_game(radient, dire): #Array of hero ids
-    return play_games([(radient, dire)])
+def play_game(radiant, dire): #Array of hero ids
+    return play_games([(radiant, dire)])
 
 def other_team(team):
-    return 'dire' if team == 'radient' else 'radient'
+    return 'dire' if team == 'radiant' else 'radiant'
 
 def play_games(games):
-    def build_input(radient, dire):
-        match = {'players': [{'hero_id': x} for x in radient + dire]}
+    def build_input(radiant, dire):
+        match = {'players': [{'hero_id': x} for x in radiant + dire]}
         if len(match['players']) != 10:
             import pdb; pdb.set_trace()
         return input_function(match)
@@ -115,12 +129,12 @@ class TreeFullyExpandedException(Exception):
     pass
 
 class DotaMonteCarloTree():
-    def __init__(self, radient_heros=[],
+    def __init__(self, radiant_heros=[],
                        dire_heros=[],
-                       team='radient',
+                       team='radiant',
                        selection_order=None,
                        possible_picks=None,
-                       parallel_simulation=False,
+                       parallel_simulation=True,
                        expansion_factor=1):
 
 
@@ -128,7 +142,7 @@ class DotaMonteCarloTree():
         self.root = DotaMonteCarloNode(0,
                                        team=other_team(team),
                                        parent_node=None,
-                                       radient_heros=radient_heros,
+                                       radiant_heros=radiant_heros,
                                        dire_heros=dire_heros,
                                        remaining_picks=possible_picks,
                                        selection_order=selection_order)
@@ -142,11 +156,11 @@ class DotaMonteCarloTree():
             print('fully expanded')
             raise TreeFullyExpandedException
         if self.parallel_simulation:
-            child_nodes = [expansion_node.expand() for _ in range(0, self.expansion_factor)]
+            child_nodes = expansion_node.fully_expand()
             games = [child_node.random_game_for_simulation() for child_node in child_nodes]
             predictions = play_games(games)
             [child_node.add_simulation_result(p) for child_node, p in zip(child_nodes, predictions)]
-            self.step_count += self.expansion_factor
+            self.step_count += len(child_nodes)
         else:
             for i in range(0, self.expansion_factor):
                 if expansion_node.fully_expanded != True:
@@ -186,10 +200,10 @@ class DotaMonteCarloTree():
         return path
 
 class DotaMonteCarloNode():
-    def __init__(self, choice, team, parent_node, radient_heros, dire_heros, 
+    def __init__(self, choice, team, parent_node, radiant_heros, dire_heros, 
                  remaining_picks, selection_order):
         self.team = team
-        self.radient_heros = radient_heros
+        self.radiant_heros = radiant_heros
         self.dire_heros = dire_heros
         self.choice = choice
         self.remaining_picks = remaining_picks
@@ -208,7 +222,7 @@ class DotaMonteCarloNode():
         return 1 + sum([child.node_count() for child in self.children])
 
     def check_if_leaf_node(self):
-        if len(self.dire_heros) + len(self.radient_heros) == 10:
+        if len(self.dire_heros) + len(self.radiant_heros) == 10:
             self.leaf_node = True
             self.fully_expanded = True
             self.children_fully_expanded = True
@@ -217,33 +231,35 @@ class DotaMonteCarloNode():
 
     def check_if_fully_expanded(self):
         self.fully_expanded = len(self.children) == len(self.remaining_picks)
-        if self.fully_expanded:
-            print(self.fully_expanded)
 
     def get_expansion_node(self):
-        best_node = None if self.fully_expanded else self
-        best_value = -10**10 if self.fully_expanded else self.value
-        for child in self.children:
-            child = child.get_expansion_node()
-            if child and child.value > best_value and child.leaf_node == False:
-                best_value = child.value
-                best_node = child
-        return best_node
+        best_node = None
+        best_value = 0
+        if len(self.children) == 0:
+            if self.leaf_node == True:
+                return None
+            else:
+                return self
+        for node in sorted([x for x in self.children], key=lambda x: -x.value):
+            child_node = node.get_expansion_node()
+            if child_node is not None:
+                return child_node
+        return None
 
-    def radient_win(self):
+    def radiant_win(self):
         self.played += 1
-        if self.team == 'radient':
+        if self.team == 'radiant':
             self.wins += 1
         if self.parent_node:
-            self.parent_node.radient_win()
+            self.parent_node.radiant_win()
         self.calculate_node_value()
 
-    def radient_loss(self):
+    def radiant_loss(self):
         self.played += 1
         if self.team == 'dire':
             self.wins += 1
         if self.parent_node:
-            self.parent_node.radient_loss()
+            self.parent_node.radiant_loss()
         self.calculate_node_value()
 
     def fully_expand(self):
@@ -259,19 +275,19 @@ class DotaMonteCarloNode():
     def expand_with_choice(self, choice):
         self.child_parameters.add(choice)
         team, pick_or_ban = self.selection_order[0]
-        radient = copy(self.radient_heros)
+        radiant = copy(self.radiant_heros)
         dire = copy(self.dire_heros)
 
         if pick_or_ban == 'pick':
-            if team == 'radient':
-                radient.append(choice)
+            if team == 'radiant':
+                radiant.append(choice)
             else:
                 dire.append(choice)
         remaining_picks = [x for x in self.remaining_picks if x is not choice]
         child_node = DotaMonteCarloNode(choice=choice,
                                         team=other_team(self.team),
                                         parent_node=self,
-                                        radient_heros=radient,
+                                        radiant_heros=radiant,
                                         dire_heros=dire,
                                         remaining_picks=remaining_picks,
                                         selection_order=self.selection_order[1:])
@@ -282,19 +298,19 @@ class DotaMonteCarloNode():
     def random_game_for_simulation(self):
         if self.leaf_node and self.leaf_win is not None:
             return
-        radient, dire = get_random_game(self.radient_heros,
+        radiant, dire = get_random_game(self.radiant_heros,
                                         self.dire_heros,
                                         self.remaining_picks,
                                         self.selection_order)
-        return radient, dire
+        return radiant, dire
 
     def add_simulation_result(self, result):
         if self.leaf_node:
             self.leaf_win = result
-        if result == True: # Radient win
-            self.radient_win()
+        if result == True: # Radiant win
+            self.radiant_win()
         else:
-            self.radient_loss()
+            self.radiant_loss()
 
     def simulate(self):
         lineup = self.random_game_for_simulation()
@@ -303,8 +319,8 @@ class DotaMonteCarloNode():
 
         if self.leaf_node and self.leaf_win is not None:
             return
-        radient, dire = lineup
-        result = play_game(radient, dire)
+        radiant, dire = lineup
+        result = play_game(radiant, dire)
         self.add_simulation_result(result)
 
     def calculate_node_value(self):
@@ -314,41 +330,80 @@ class DotaMonteCarloNode():
         self.value = component_1 + (exploration_parameter * component_2)
 
 
-radient = ['storm_spirit', 'spectre', 'silencer']
-dire = ['bloodseeker', 'doom_bringer', 'venomancer']
 
-radient = [get_hero_id_from_name(x) for x in radient]
-dire = [get_hero_id_from_name(x) for x in dire]
+if mode == 'all_pick':
+    radiant = [get_hero_id_from_name(x) for x in radiant]
+    dire = [get_hero_id_from_name(x) for x in dire]
 
-team = 'radient'
+    team = 'radiant'
 
-selection_order = []
-radient_heros_picked = len(radient)
-dire_heros_picked = len(dire)
+    selection_order = []
+    radiant_heros_picked = len(radiant)
+    dire_heros_picked = len(dire)
 
-while (radient_heros_picked + dire_heros_picked) != 10:
-    if radient_heros_picked <= dire_heros_picked:
-        selection_order.append(('radient', 'pick'))
-        radient_heros_picked += 1
-    else:
-        selection_order.append(('dire', 'pick'))
-        dire_heros_picked += 1
+    while (radiant_heros_picked + dire_heros_picked) != 10:
+        if radiant_heros_picked <= dire_heros_picked:
+            selection_order.append(('radiant', 'pick'))
+            radiant_heros_picked += 1
+        else:
+            selection_order.append(('dire', 'pick'))
+            dire_heros_picked += 1
 
-possible_picks = [x['id'] for x in hero_list['heroes'] if x['name'] not in radient and x['name'] not in dire and x['id'] != 0]
+    possible_picks = [x['id'] for x in hero_list['heroes'] if x['name'] not in radiant and x['name'] not in dire and x['id'] != 0]
+
+elif mode == 'captains':
+    other_team = 'dire' if starting_team == 'radiant' else 'radiant'
+    selection_order = [
+        (starting_team, 'ban'),
+        (other_team, 'ban'),
+        (starting_team, 'ban'),
+        (other_team, 'ban'),
+        (starting_team, 'ban'),
+        (other_team, 'ban'),
+
+        (starting_team, 'pick'),
+        (other_team, 'pick'),
+        (other_team, 'pick'),
+        (starting_team, 'pick'),
+        
+        (starting_team, 'ban'),
+        (other_team, 'ban'),
+        (starting_team, 'ban'),
+        (other_team, 'ban'),
+        
+        (starting_team, 'pick'),
+        (other_team, 'pick'),
+        (starting_team, 'pick'),
+        (other_team, 'pick'),
+        
+        (other_team, 'ban'),
+        (starting_team, 'ban'),
+        
+        (starting_team, 'pick'),
+        (other_team, 'pick'),
+    ]
+
+    radiant = [get_hero_id_from_name(x) for x in radiant]
+    dire = [get_hero_id_from_name(x) for x in dire]
+
+
+
 
 print("Remaining Selection Order: {0}".format(selection_order))
-tree = DotaMonteCarloTree(radient_heros=radient,
+tree = DotaMonteCarloTree(radiant_heros=radiant,
                           dire_heros=dire,
                           team=team,
                           selection_order=selection_order,
                           possible_picks=possible_picks)
 tree.root.fully_expand()
-flamegraph.start_profile_thread(fd=open("perf.log", "w"))
 
-for i in range(0, 10):
+previous_count = 0
+
+for i in range(0, 30):
     print(i)
     tree.run_for_time(1)
-    print("Executed {0} steps".format(tree.step_count))
+    print("Executed {0} ({1}) steps".format(tree.step_count, tree.step_count-previous_count))
+    previous_count = tree.step_count
     path = tree.get_best_path()
     print(tree.root.value)
     for node, selection in zip(path, selection_order):
@@ -356,7 +411,7 @@ for i in range(0, 10):
         print(node.value)
 total_possible_options = potential_child_simulations(possible_picks, selection_order)
 evaluated = tree.evaluated_node_count()
-
+import pdb; pdb.set_trace()
 print("total possible options: {0}".format(total_possible_options))
 print("evaluated: {0}".format(evaluated))
 
