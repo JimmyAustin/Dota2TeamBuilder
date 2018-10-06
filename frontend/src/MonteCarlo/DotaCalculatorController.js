@@ -9,7 +9,6 @@ class DotaCalculatorController extends Component {
   constructor(props) {
     super()
 
-
     const treeHandler = new treeWorker();
 
     treeHandler.addEventListener('message', (event) => {
@@ -19,7 +18,11 @@ class DotaCalculatorController extends Component {
           this.start_calculations()
         }
       } else if (event.data.state == 'UPDATE') {
-        this.setState({best_picks: event.data.current_best,
+        if (this.props.provisional_callback) {
+          var choices = event.data.current_best.map((x) => { return x.choice });
+          this.props.provisional_callback(choices);
+        }
+        this.setState({best_picks: event.data.current_best.map((x) => { return x.choice }),
                        step_count: event.data.step_count, 
                        simmed_game_count: event.data.simmed_game_count})
       } else if (event.data.state == 'MODEL_READY') {
@@ -47,17 +50,8 @@ class DotaCalculatorController extends Component {
     this.start_calculations = this.start_calculations.bind(this);
     this.toggle_calculations = this.toggle_calculations.bind(this);
     this.update_worker_state = this.update_worker_state.bind(this);
-  }
 
-  update_worker_state() {
-    this.state.worker.postMessage({
-      func: 'updateBaseState', 
-      radiant_heroes: this.props.radiant_heroes,
-      dire_heroes: this.props.dire_heroes,
-      radiant_bans: this.props.radiant_bans,
-      dire_bans: this.props.dire_bans,
-      selection_order: this.props.selection_order    
-    });
+    this.update_worker_state(props)
   }
 
   toggle_calculations() {
@@ -68,6 +62,28 @@ class DotaCalculatorController extends Component {
       this.setState({running: true})
       this.start_calculations()
     }
+  }
+
+  componentWillReceiveProps(props) {
+    if (this.props.radiant_heroes != props.radiant_heroes ||
+        this.props.dire_heroes != props.dire_heroes ||
+        this.props.radiant_bans != props.radiant_bans ||
+        this.props.dire_bans != props.dire_bans) {
+      this.update_worker_state(props)
+
+    }
+  }
+
+  update_worker_state(state) {
+    var updated_state = state || this.props;
+    this.state.worker.postMessage({
+      func: 'updateBaseState', 
+      radiant_heroes: updated_state.radiant_heroes,
+      dire_heroes: updated_state.dire_heroes,
+      radiant_bans: updated_state.radiant_bans,
+      dire_bans: updated_state.dire_bans,
+      selection_order: updated_state.selection_order    
+    });
   }
 
   start_calculations() {

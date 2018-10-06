@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@tensorflow/tfjs": "^0.12.5",
     "mcts": "0.0.8",
     "react": "^16.4.2",
     "react-dom": "^16.4.2",
@@ -11,9 +10,15 @@
     "react-tooltip": "^3.6.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test --env=jsdom",
+    "eject": "react-app-rewired eject"
+  },
+  "devDependencies": {
+    "@tensorflow/tfjs": "^0.12.7",
+    "react-app-rewired": "^1.6.2",
+    "shuffle-array": "^1.0.1",
+    "worker-loader": "^2.0.0"
   }
 }

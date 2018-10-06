@@ -5,7 +5,8 @@ import HeroList from './HeroList.js';
 import TeamList from './TeamList.js';
 import PickOrdererView from './PickOrdererView.js';
 import TeamEvaluator from './TeamEvaluator.js';
-import heroes from 'config/heroes';
+import DotaCalculatorController from './MonteCarlo/DotaCalculatorController.js';
+import heroes from './config/heroes';
 
 class App extends Component {
   constructor() {
@@ -71,15 +72,15 @@ class App extends Component {
   add_hero_to_team(team, pick, hero_id) {
     if (team == 'radiant') {
       if (pick == 'pick') {
-        this.setState({radiant_heroes: Array.concat(this.state.radiant_heroes, [hero_id])})
+        this.setState({radiant_heroes: this.state.radiant_heroes.concat([hero_id])})
       } else {
-        this.setState({radiant_bans: Array.concat(this.state.radiant_bans, [hero_id])})
+        this.setState({radiant_bans: this.state.radiant_bans.concat([hero_id])})
       }
     } else {
       if (pick == 'pick') {
-        this.setState({dire_heroes: Array.concat(this.state.dire_heroes, [hero_id])})
+        this.setState({dire_heroes: this.state.dire_heroes.concat([hero_id])})
       } else {
-        this.setState({dire_bans: Array.concat(this.state.dire_bans, [hero_id])})
+        this.setState({dire_bans: this.state.dire_bans.concat([hero_id])})
       }
     }
   }
@@ -118,15 +119,22 @@ class App extends Component {
   }
 
   swap_starting_team() {
-    this.setState({starting_team: this.state.starting_team == 'radiant' ? 'dire' : 'radiant'})
+    this.setState({
+      radiant_picks: this.state.dire_heroes,
+      dire_picks: this.state.radiant_heroes,
+      radiant_bans: this.state.dire_bans,
+      dire_bans: this.state.radiant_bans,
+      starting_team: this.state.starting_team == 'radiant' ? 'dire' : 'radiant'
+    })
   }
 
   render() {
     return (
       <div className="App">
         <div style={{
-              width: '20%',
-              display: 'inline-block'}}>
+              width: '320px',
+              display: 'inline-block',
+              float: 'left'}}>
               <div onClick={this.swap_starting_team}>Starting Team: {this.state.starting_team}</div>
             <PickOrdererView 
               selection_order={build_selection_order(this.state.starting_team)}
@@ -136,15 +144,23 @@ class App extends Component {
               dire_bans={this.state.dire_bans}
               provisional_choices={this.state.provisional_choices}>
             </PickOrdererView>
+            <div style={{height: '44px'}}>
+              <button style={{height: '30px', width: '200px', margin: '2px'}} onClick={this.back}>
+                Back
+              </button>
+            </div>
         </div>
         <div style={{
-              width: '80%',
-              display: 'inline-block'}}>
-              <div onClick={this.back}>Back</div>
-          <TeamEvaluator
+              position: 'absolute',
+              left: '320px'}}>
+          <DotaCalculatorController
             radiant_heroes={this.state.radiant_heroes}
             dire_heroes={this.state.dire_heroes}
-            ></TeamEvaluator>
+            radiant_bans={this.state.radiant_bans}
+            dire_bans={this.state.dire_bans}
+            selection_order={build_selection_order(this.state.starting_team)}
+            provisional_callback={this.update_provisional_heros}
+            ></DotaCalculatorController>
           <div style={{display: 'flex', flexWrap: 'wrap'}}>
             <TeamList 
               team_name='Radiant Picks'
@@ -172,7 +188,7 @@ class App extends Component {
             </TeamList>
           </div>
           <HeroList
-            selectedHeros={Array.concat(this.state.dire_heroes, this.state.radiant_heroes, 
+            selectedHeros={this.state.dire_heroes.concat(this.state.radiant_heroes, 
                                         this.state.radiant_bans, this.state.dire_bans)}
             onUnselectedClick={this.add_hero}
           >

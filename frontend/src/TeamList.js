@@ -1,15 +1,19 @@
 import React, { Component } from 'react';
-import heroes from 'config/heroes'
+import heroes from './config/heroes'
 import ReactTooltip from 'react-tooltip'
 import HeroItem from './HeroItem';
 
 class TeamList extends Component {
+  constructor(props) {
+    super();
+    this.state = {'search': ''}
+  }
+
   render() {
   	var heros_by_id = {};
   	heroes.map(function(x) {
   		heros_by_id[x.ID] = x;
   	});
-  	console.log(this.props)
   	var self = this;
   	var heros = this.props.heroes.map(function(x) {
   		return <HeroItem 

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import heroes from 'config/heroes';
+import heroes from './config/heroes';
 import PickOrderRow from './PickOrderRow';
 
 class PickOrdererView extends Component {

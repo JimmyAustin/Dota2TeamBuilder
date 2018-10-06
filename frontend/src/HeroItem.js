@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import heroes from 'config/heroes'
+import heroes from './config/heroes'
 import ReactTooltip from 'react-tooltip'
 class HeroItem extends Component {
   constructor() {
@@ -7,6 +7,9 @@ class HeroItem extends Component {
     this.clicked = this.clicked.bind(this);
   }
   clicked() {
+    if (this.props.disabled == true) {
+      return
+    }
     console.log('clicked');
     if (this.props.onClick) {
       this.props.onClick(this.props.info.ID);

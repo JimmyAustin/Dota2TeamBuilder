@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import heroes from 'config/heroes';
+import heroes from './config/heroes';
 import ReactTooltip from 'react-tooltip';
 import * as tf from '@tensorflow/tfjs';
-import hero_embeddings from 'config/normalized_embeddings';
+import hero_embeddings from './config/normalized_embeddings';
 
 
 class TeamEvaluator extends Component {

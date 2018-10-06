@@ -2,7 +2,7 @@ import DotaState from './DotaState';
 import DotaNode from './DotaNode';
 import {run_games} from './evaluate_game.js';
 
-var pick_order = [
+var default_pick_order = [
     {team: 'R', pick_type: 'ban', count: 0},
     {team: 'D', pick_type: 'ban', count: 0},
     {team: 'R', pick_type: 'ban', count: 1},
@@ -43,11 +43,26 @@ class DotaTree {
 		this.game_count = 0
 		this.root_node = new DotaNode(null, 0, base_state)
 		this.step_count = 0
-		this.games_per_expansion = 50;
+		this.games_per_expansion = 5;
 		this.expand = this.expand.bind(this)
 		this.finished = false
+		this.pick_order = default_pick_order;
+		this.update_root_state = this.update_root_state.bind(this)
 	};
 
+	update_root_state(selection_order, radiant_heroes, dire_heroes, 
+					  banned_heroes) {
+		//debugger;
+		this.pick_order = selection_order
+		var new_base_state = new DotaState({
+			radiant_heroes: radiant_heroes,
+			dire_heroes: dire_heroes,
+			banned_heroes: banned_heroes
+		})
+		var new_depth = (radiant_heroes.length + dire_heroes.length
+						+ banned_heroes.length);
+		this.root_node = new DotaNode(null, new_depth, new_base_state);
+	}
 
 	async step() {
 		this.step_count += 1
@@ -71,10 +86,10 @@ class DotaTree {
 		node.being_expanded = true
 		var future_possible_picks = node.future_picks(this.games_per_expansion);
 		if (future_possible_picks.length == 0) {
-			debugger;
 			return false;
 		}
-		var pick_type = pick_order[node.depth]
+
+		var pick_type = this.pick_order[node.depth]
 		var new_picks = future_possible_picks.map((hero_pick) => {
 			if (pick_type.pick_type === 'ban') {
 				var bans = node.state.banned_heroes.slice()
@@ -118,7 +133,6 @@ class DotaTree {
 		this.game_count += played_out_teams.length;
 
 		node.children = node.children.concat(new_picks);
-
 		result.forEach((result, i) => {
 			var radiant_win = result[0] > result[1]
 			var node_is_radiant = pick_type['team'] === 'R';
