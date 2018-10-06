@@ -1,2 +1,3 @@
 scraper/scrape_results/*
 scraper/cleaned_data/*
+modelling/tmp/*
