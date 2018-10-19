@@ -32,14 +32,18 @@ for filepath in all_files:
                             unseen_player_list.append(player['account_id'])
             except Exception:
                 pass
+
 unseen_player_list = [x for x in unseen_player_list if x not in seen_players]
+
+if len(unseen_player_list) == 0:
+    unseen_player_list = [31632658] # That's Zin
 
 print('Inited, {0} duplicate matches'.format(duplicate_matches_count))
 
 import dota2api
 from ratelimit import limits, sleep_and_retry
 
-api = dota2api.Initialise("03FCD0A181FF71C3B802E1E5C938BFB1")
+api = dota2api.Initialise()
 
 
 match_count = len(seen_match_ids)
@@ -55,7 +59,8 @@ def get_next_filename():
 matches_file = open(get_next_filename(), 'wb')
 
 def print_status_update():
-    print("Matches saved: {0}, Players Seen: {1}, Players To Go: {2}".format(match_count, len(seen_players) - len(unseen_player_list), len(unseen_player_list)))
+    players_seen = len(seen_players) - len(unseen_player_list)
+    print("Matches saved: {0}, Players Seen: {1}, Players To Go: {2}".format(match_count, players_seen, len(unseen_player_list)))
 
 @sleep_and_retry
 @limits(calls=1, period=1.10)
