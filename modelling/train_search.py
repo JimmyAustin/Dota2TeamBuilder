@@ -4,17 +4,26 @@ print(device_lib.list_local_devices())
 
 import json
 
-hero_embeddings = json.loads(open('normalized_embeddings.json', 'r').read())
+hero_embeddings = json.loads(open('./embeddings/normalized_embeddings.json', 'r').read())
 
-keys =  ['STR', 'STR+', 'STR25', 'AGI', 'AGI+', 'AGI25', 'INT', 'INT+', 'INT25', 'T', 'T+', 'T25', 'MS', 'AR', 'DMG(MIN)', 'DMG(MAX)', 'RG', 'BAT', 'ATK PT', 'ATK BS', 'VS-D', 'VS-N', 'TR', 'COL', 'HP/S', 'L', 'is_str', 'is_agi', 'is_int', '0_win', '0_gpm', '0_assists', '0_denies', '0_deaths', '0_kills', '0_last_hits', '0_level', '0_hero_damage', '0_hero_healing', '0_tower_damage', '0_xp_per_min', '1_win', '1_gpm', '1_assists', '1_denies', '1_deaths', '1_kills', '1_last_hits', '1_level', '1_hero_damage', '1_hero_healing', '1_tower_damage', '1_xp_per_min', '2_win', '2_gpm', '2_assists', '2_denies', '2_deaths', '2_kills', '2_last_hits', '2_level', '2_hero_damage', '2_hero_healing', '2_tower_damage', '2_xp_per_min', '3_win', '3_gpm', '3_assists', '3_denies', '3_deaths', '3_kills', '3_last_hits', '3_level', '3_hero_damage', '3_hero_healing', '3_tower_damage', '3_xp_per_min']
+keys =  ['STR', 'STR+', 'STR25', 'AGI', 'AGI+', 'AGI25', 'INT', 'INT+', 'INT25', 'T', 'T+', 
+         'T25', 'MS', 'AR', 'DMG(MIN)', 'DMG(MAX)', 'RG', 'BAT', 'ATK PT', 'ATK BS', 'VS-D',
+         'VS-N', 'TR', 'COL', 'HP/S', 'L', 'is_str', 'is_agi', 'is_int', '0_win', '0_gpm', 
+         '0_assists', '0_denies', '0_deaths', '0_kills', '0_last_hits', '0_level', '0_hero_damage', 
+         '0_hero_healing', '0_tower_damage', '0_xp_per_min', '1_win', '1_gpm', '1_assists', '1_denies',
+         '1_deaths', '1_kills', '1_last_hits', '1_level', '1_hero_damage', '1_hero_healing', 
+         '1_tower_damage', '1_xp_per_min', '2_win', '2_gpm', '2_assists', '2_denies', '2_deaths', 
+         '2_kills', '2_last_hits', '2_level', '2_hero_damage', '2_hero_healing', '2_tower_damage', 
+         '2_xp_per_min', '3_win', '3_gpm', '3_assists', '3_denies', '3_deaths', '3_kills', 
+         '3_last_hits', '3_level', '3_hero_damage', '3_hero_healing', '3_tower_damage', '3_xp_per_min']
 
 def build_array_embedding(hero_embedding):
     return [hero_embedding[key] for key in keys]
 
 array_hero_embeddings = {k: build_array_embedding(v) for k, v in hero_embeddings.items()}
 
-friendly_matchups = json.loads(open('friendly_matchups.json', 'r').read())
-enemy_matchups = json.loads(open('enemy_matchups.json', 'r').read())
+friendly_matchups = json.loads(open('./embeddings/friendly_matchups.json', 'r').read())
+enemy_matchups = json.loads(open('./embeddings/enemy_matchups.json', 'r').read())
 
 import numpy
 from keras.datasets import imdb
@@ -30,8 +39,6 @@ from toolbox.notebook import *
 from sklearn.model_selection import train_test_split
 import random
 from utils import *
-# fix random seed for reproducibility
-numpy.random.seed(7)
 
 batch_size = 32
 
@@ -62,46 +69,12 @@ from keras_tqdm import TQDMCallback
 import random
 import string
 
-# all_files = get_files_in_folders('./scraper/cleaned_data/')
-# training_set, validating_set = train_test_split(all_files, train_size=0.9)
-# training_generator = data_generator(training_set, batch_size=batch_size, transform_func=transform_func)
-# validating_generator = data_generator(validating_set, batch_size=batch_size, transform_func=transform_func)
-
-# print("end training")
-# test_values = []
-# test_labels = []
-# for x in range(0, 100):
-#     test_value, label = validating_generator.__next__()
-#     test_values.extend(test_value)
-#     test_labels.extend(label)
-
-# del training_generator
-# del validating_generator
-
-# def test_model(model):
-#     def test(epoch, logs):
-#         num_correct = 0
-#         for value, label in zip(test_values, test_labels):
-#             evalled_result = model.predict(np.array((value,)))
-#             if len(evalled_result[0] == 1):
-#                 prediction = evalled_result[0][0] > 0.5
-#             else:
-#                 prediction = evalled_result[0][0] > evalled_result[0][1]
-#             correct = prediction == label[0]
-#             #print("{0} == {1} - {2}".format(evalled_result, label, correct))
-#             if correct:
-#                 num_correct += 1
-#         value = num_correct/len(test_labels)
-#         print("Epcoh: {epoch}, Value: {value}".format(epoch=epoch, value=value))
-#         return value
-#     return test
-
 
 def test_run(layers=[], epochs=10, output_shape=2, optimizer='adam', transform_func=None, loss='binary_crossentropy', final_activation_function='softmax'):
     print("TESTING")
     print("LAYERS: {0}".format(layers))
     print("EPOCHS: {0}".format(epochs))
-    all_files = get_files_in_folders('./scraper/cleaned_data/')
+    all_files = get_files_in_folders('../scraper/cleaned_data/')
 
     training_set, validating_set = train_test_split(all_files, train_size=0.9)
     training_generator = data_generator(training_set, batch_size=batch_size, transform_func=transform_func)

@@ -1,10 +1,10 @@
 import json
 from toolbox.notebook.fs import *
 import numpy as np
-hero_list = json.load(open('./heroes.json'))
 
-hero_list_by_id = {x['id']: x for x in hero_list['heroes']}
-hero_id_by_name = {x['name']: x['id'] for x in hero_list['heroes']}
+hero_list = json.load(open('../config/heroes.json'))
+hero_list_by_id = {x['ID']: x for x in hero_list}
+hero_id_by_name = {x['NAME']: x['ID'] for x in hero_list}
 
 def get_hero_id_from_name(name):
     return hero_id_by_name[name]
@@ -35,7 +35,7 @@ def all_valid_players(match):
 def proper_match(match):
     return proper_match_type(match) and all_valid_players(match)
 
-hero_embeddings = json.loads(open('normalized_embeddings.json', 'r').read())
+hero_embeddings = json.loads(open('./embeddings/normalized_embeddings.json', 'r').read())
 
 keys =  ['STR', 'STR+', 'STR25', 'AGI', 'AGI+', 'AGI25', 'INT', 'INT+', 'INT25', 'T', 'T+', 'T25', 'MS', 'AR', 'DMG(MIN)', 'DMG(MAX)', 'RG', 'BAT', 'ATK PT', 'ATK BS', 'VS-D', 'VS-N', 'TR', 'COL', 'HP/S', 'L', 'is_str', 'is_agi', 'is_int', '0_win', '0_gpm', '0_assists', '0_denies', '0_deaths', '0_kills', '0_last_hits', '0_level', '0_hero_damage', '0_hero_healing', '0_tower_damage', '0_xp_per_min', '1_win', '1_gpm', '1_assists', '1_denies', '1_deaths', '1_kills', '1_last_hits', '1_level', '1_hero_damage', '1_hero_healing', '1_tower_damage', '1_xp_per_min', '2_win', '2_gpm', '2_assists', '2_denies', '2_deaths', '2_kills', '2_last_hits', '2_level', '2_hero_damage', '2_hero_healing', '2_tower_damage', '2_xp_per_min', '3_win', '3_gpm', '3_assists', '3_denies', '3_deaths', '3_kills', '3_last_hits', '3_level', '3_hero_damage', '3_hero_healing', '3_tower_damage', '3_xp_per_min']
 
@@ -44,8 +44,8 @@ def build_array_embedding(hero_embedding):
 
 array_hero_embeddings = {k: build_array_embedding(v) for k, v in hero_embeddings.items()}
 
-friendly_matchups = json.loads(open('friendly_matchups.json', 'r').read())
-enemy_matchups = json.loads(open('enemy_matchups.json', 'r').read())
+friendly_matchups = json.loads(open('./embeddings/friendly_matchups.json', 'r').read())
+enemy_matchups = json.loads(open('./embeddings/enemy_matchups.json', 'r').read())
 
 def get_player_embedding_from_match(player, match, radient):
     def get_player_matchup(other_player):

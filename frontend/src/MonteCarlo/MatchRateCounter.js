@@ -35,7 +35,7 @@ class MatchRateCounter extends Component {
       <div>
         simmed_game_count: {this.props.simmed_game_count}
         <br/>
-        rate2: {this.rate()}
+        Rate: {this.rate()}
       </div>
     );
   }

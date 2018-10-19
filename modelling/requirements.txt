@@ -1,0 +1,9 @@
+ Keras==2.2.4
+ h5py==2.8.0
+ keras==applications==1.0.6
+ keras==preprocessing==1.0.5
+ keras==tqdm==2.0.1
+ numpy==1.15.2
+ pyyaml==3.13
+ scipy==1.1.0
+ tqdm==4.27.0

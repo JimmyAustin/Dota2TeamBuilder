@@ -1,3 +1,6 @@
+# This is a test implementation of the monte carlo 
+
+
 # This is gonna be played on users CPUs, so we should use it on ours.
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
@@ -28,13 +31,14 @@ model_configuration = {'epochs': 20,
  'optimizer': 'adagrad'}
 
 exploration_parameter = sqrt(2)
-#exploration_parameter = 1000
 total_hero_pool = len(hero_list)
 
 model_directory = './tmp/'
 model_name = 'classification__PO40HVWG6Y__.01-0.22.hdf5'
 
-if True:
+mode = 'all_pick'
+
+if mode == 'all_pick':
     mode = 'all_pick'
     radiant = ['storm_spirit', 'spectre', 'silencer']
     dire = ['bloodseeker', 'doom_bringer', 'venomancer']
