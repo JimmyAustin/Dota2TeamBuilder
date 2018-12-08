@@ -42,7 +42,7 @@ function build_model_input(radiant_heroes, dire_heroes) {
     var hero_count = 120;
 
     var include_integrated_one_hot_encodings = false;
-    var include_hero_encodings = true;
+    var include_hero_encodings = false;
 
     var integrated_one_hot_encodings = []
     var hero_embeddings = []
